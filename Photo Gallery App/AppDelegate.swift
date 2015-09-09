@@ -7,17 +7,25 @@
 //
 
 import UIKit
+import Parse
+import Bolts
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
-
+    
+    var mpcManager: MPCManager!
 
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
-        // Override point for customization after application launch.
+        
+        mpcManager = MPCManager()
+        
+        //Initialize Parse
+        Parse.enableLocalDatastore()
+        Parse.setApplicationId("o06AlQK20BmtezsLNo0Tk2dLT8HAUnlqe4B9piw2", clientKey: "qsYlGS9JSUyfuZFf2UVHlscUvQTmGkxm0bNDDQgi")
         return true
-    }
+    } 
 
     func applicationWillResignActive(application: UIApplication) {
         // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
