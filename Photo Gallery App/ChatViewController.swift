@@ -21,7 +21,7 @@ class ChatViewController: UIViewController, UITextFieldDelegate, UITableViewDele
     
     var sendImage: UIImage!
     
-    let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
+    let appDelegate = UIApplication.shared.delegate as! AppDelegate
     
     let context = CIContext(options: nil)
     
@@ -38,7 +38,7 @@ class ChatViewController: UIViewController, UITextFieldDelegate, UITableViewDele
         
         txtChat.delegate = self
         
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: "handleMPCReceivedDataWithNotification:", name: "receivedMPCDataNotification", object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(ChatViewController.handleMPCReceivedDataWithNotification(_:)), name: NSNotification.Name(rawValue: "receivedMPCDataNotification"), object: nil)
     }
     
     override func didReceiveMemoryWarning() {
@@ -46,16 +46,16 @@ class ChatViewController: UIViewController, UITextFieldDelegate, UITableViewDele
         // Dispose of any resources that can be recreated.
     }
     
-    override func viewWillAppear(animated: Bool) {
+    override func viewWillAppear(_ animated: Bool) {
         self.navigationController?.hidesBarsOnTap = true
     }
 
     // IBAction method implementation
     
-    @IBAction func endChat(sender: AnyObject) {
+    @IBAction func endChat(_ sender: AnyObject) {
         let messageDictionary: [String: String] = ["message": "_end_chat_"]
-        if appDelegate.mpcManager.sendData(dictionaryWithData: messageDictionary, toPeer: appDelegate.mpcManager.session.connectedPeers[0] as! MCPeerID){
-            self.dismissViewControllerAnimated(true, completion: { () -> Void in
+        if appDelegate.mpcManager.sendData(dictionaryWithData: messageDictionary, toPeer: appDelegate.mpcManager.session.connectedPeers[0] ){
+            self.dismiss(animated: true, completion: { () -> Void in
                 self.appDelegate.mpcManager.session.disconnect()
             })
         }
@@ -65,38 +65,38 @@ class ChatViewController: UIViewController, UITextFieldDelegate, UITableViewDele
     
     
 //    Exchange Photos
-    @IBAction func exchangePhoto(sender: AnyObject) {
-        var picker : UIImagePickerController = UIImagePickerController()
-        picker.sourceType = UIImagePickerControllerSourceType.PhotoLibrary
+    @IBAction func exchangePhoto(_ sender: AnyObject) {
+        let picker : UIImagePickerController = UIImagePickerController()
+        picker.sourceType = UIImagePickerControllerSourceType.photoLibrary
         picker.delegate = self
         picker.allowsEditing = false
-        self.presentViewController(picker, animated: true, completion: nil)
+        self.present(picker, animated: true, completion: nil)
     }
     
     //UIImagePickerControllerDelege methods
-    func imagePickerController(picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [NSObject : AnyObject]){
+    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : Any]){
         sendImage = info[UIImagePickerControllerOriginalImage] as? UIImage
        
-        let imageData:NSData = UIImagePNGRepresentation(sendImage)
-        let imageDictionary: [String: NSData] = ["Image": imageData]
-        appDelegate.mpcManager.sendImage(dictionaryWithData: imageDictionary, toPeer: appDelegate.mpcManager.session.connectedPeers[0] as! MCPeerID)
-        picker.dismissViewControllerAnimated(true, completion: nil)
+        let imageData:Data = UIImagePNGRepresentation(sendImage)!
+        let imageDictionary: [String: Data] = ["Image": imageData]
+        appDelegate.mpcManager.sendImage(dictionaryWithData: imageDictionary as Dictionary<String, NSData>, toPeer: appDelegate.mpcManager.session.connectedPeers[0] )
+        picker.dismiss(animated: true, completion: nil)
     }
-    func imagePickerControllerDidCancel(picker: UIImagePickerController){
-        picker.dismissViewControllerAnimated(true, completion: nil)
+    func imagePickerControllerDidCancel(_ picker: UIImagePickerController){
+        picker.dismiss(animated: true, completion: nil)
     }
     
-    func handleReceuvedImage(notification: NSNotification){
+    func handleReceuvedImage(_ notification: Notification){
         let receivedDataDictionary = notification.object as! Dictionary<String, AnyObject>
-        let data = receivedDataDictionary["data"] as? NSData
-        let dataDictionary = NSKeyedUnarchiver.unarchiveObjectWithData(data!) as! Dictionary<String, NSData>
+        let data = receivedDataDictionary["data"] as? Data
+        let dataDictionary = NSKeyedUnarchiver.unarchiveObject(with: data!) as! Dictionary<String, Data>
         var receivedImage:UIImage?
-        if let dictionary:NSData = dataDictionary["Image"]{
+        if let dictionary:Data = dataDictionary["Image"]{
             receivedImage = UIImage(data: dictionary)
         }
-        let ciImage = CIImage(image: receivedImage)
-        let saveImage = context.createCGImage(ciImage, fromRect: ciImage.extent())
-        ALAssetsLibrary().writeImageToSavedPhotosAlbum(saveImage, orientation: ALAssetOrientation.Up, completionBlock: { (path:NSURL!, error:NSError!) -> Void in
+        let ciImage = CIImage(image: receivedImage!)
+        let saveImage = context.createCGImage(ciImage!, from: (ciImage?.extent)!)
+        ALAssetsLibrary().writeImageToSavedPhotosAlbum(saveImage, orientation: ALAssetOrientation.Up, completionBlock: { (path:URL!, error:NSError!) -> Void in
             if path != nil{
                 var myAlert = UIAlertController(title: "Alert", message: "New Image has been saved!", preferredStyle: UIAlertControllerStyle.Alert)
                 let okAction = UIAlertAction(title: "Alert", style: UIAlertActionStyle.Default, handler: {
@@ -105,7 +105,7 @@ class ChatViewController: UIViewController, UITextFieldDelegate, UITableViewDele
                 myAlert.addAction(okAction)
                 self.presentViewController(myAlert, animated: true, completion: nil)
             }else{
-                println("\(path)")
+                print("\(path)")
             }
         })
 //        PHPhotoLibrary.sharedPhotoLibrary().performChanges({
@@ -125,20 +125,20 @@ class ChatViewController: UIViewController, UITextFieldDelegate, UITableViewDele
 
     // UITableView related method implementation
     
-    func numberOfSectionsInTableView(tableView: UITableView) -> Int {
+    func numberOfSections(in tableView: UITableView) -> Int {
         return 1
     }
     
     
-    func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return messagesArray.count
     }
     
     
-    func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
-        var cell = tableView.dequeueReusableCellWithIdentifier("idCell") as! UITableViewCell
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        var cell = tableView.dequeueReusableCell(withIdentifier: "idCell") as! UITableViewCell
         
-        let currentMessage = messagesArray[indexPath.row] as Dictionary<String, String>
+        let currentMessage = messagesArray[(indexPath as NSIndexPath).row] as Dictionary<String, String>
         
         if let sender = currentMessage["sender"] {
             var senderLabelText: String
@@ -146,11 +146,11 @@ class ChatViewController: UIViewController, UITextFieldDelegate, UITableViewDele
             
             if sender == "self"{
                 senderLabelText = "I said:"
-                senderColor = UIColor.purpleColor()
+                senderColor = UIColor.purple
             }
             else{
                 senderLabelText = sender + " said:"
-                senderColor = UIColor.orangeColor()
+                senderColor = UIColor.orange
             }
             
             cell.detailTextLabel?.text = senderLabelText
@@ -168,20 +168,20 @@ class ChatViewController: UIViewController, UITextFieldDelegate, UITableViewDele
     
     // UITextFieldDelegate method implementation
     
-    func textFieldShouldReturn(textField: UITextField) -> Bool {
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         textField.resignFirstResponder()
         
-        let messageDictionary: [String: String] = ["message": textField.text]
+        let messageDictionary: [String: String] = ["message": textField.text!]
         
-        if appDelegate.mpcManager.sendData(dictionaryWithData: messageDictionary, toPeer: appDelegate.mpcManager.session.connectedPeers[0] as! MCPeerID){
+        if appDelegate.mpcManager.sendData(dictionaryWithData: messageDictionary, toPeer: appDelegate.mpcManager.session.connectedPeers[0] ){
             
-            var dictionary: [String: String] = ["sender": "self", "message": textField.text]
+            var dictionary: [String: String] = ["sender": "self", "message": textField.text!]
             messagesArray.append(dictionary)
             
             self.updateTableview()
         }
         else{
-            println("Could not send data")
+            print("Could not send data")
         }
         
         textField.text = ""
@@ -196,51 +196,51 @@ class ChatViewController: UIViewController, UITextFieldDelegate, UITableViewDele
         tblChat.reloadData()
         
         if self.tblChat.contentSize.height > self.tblChat.frame.size.height {
-            tblChat.scrollToRowAtIndexPath(NSIndexPath(forRow: messagesArray.count - 1, inSection: 0), atScrollPosition: UITableViewScrollPosition.Bottom, animated: true)
+            tblChat.scrollToRow(at: IndexPath(row: messagesArray.count - 1, section: 0), at: UITableViewScrollPosition.bottom, animated: true)
         }
     }
     
     
-    func handleMPCReceivedDataWithNotification(notification: NSNotification) {
+    func handleMPCReceivedDataWithNotification(_ notification: Notification) {
         // Get the dictionary containing the data and the source peer from the notification.
         let receivedDataDictionary = notification.object as! Dictionary<String, AnyObject>
         
         // "Extract" the data and the source peer from the received dictionary.
-        let data = receivedDataDictionary["data"] as? NSData
+        let data = receivedDataDictionary["data"] as? Data
         let fromPeer = receivedDataDictionary["fromPeer"] as! MCPeerID
         
         // Convert the data (NSData) into a Dictionary object.
-        let dataDictionary = NSKeyedUnarchiver.unarchiveObjectWithData(data!) as! Dictionary<String, String>
+        let dataDictionary = NSKeyedUnarchiver.unarchiveObject(with: data!) as! Dictionary<String, String>
         
         // Check if there's an entry with the "message" key.
         if let message = dataDictionary["message"] {
             // Make sure that the message is other than "_end_chat_".
             if message != "_end_chat_"{
                 // Create a new dictionary and set the sender and the received message to it.
-                var messageDictionary: [String: String] = ["sender": fromPeer.displayName, "message": message]
+                let messageDictionary: [String: String] = ["sender": fromPeer.displayName, "message": message]
                 
                 // Add this dictionary to the messagesArray array.
                 messagesArray.append(messageDictionary)
                 
                 // Reload the tableview data and scroll to the bottom using the main thread.
-                NSOperationQueue.mainQueue().addOperationWithBlock({ () -> Void in
+                OperationQueue.main.addOperation({ () -> Void in
                     self.updateTableview()
                 })
             }
             else{
                 // In this case an "_end_chat_" message was received.
                 // Show an alert view to the user.
-                let alert = UIAlertController(title: "", message: "\(fromPeer.displayName) ended this chat.", preferredStyle: UIAlertControllerStyle.Alert)
+                let alert = UIAlertController(title: "", message: "\(fromPeer.displayName) ended this chat.", preferredStyle: UIAlertControllerStyle.alert)
                 
-                let doneAction: UIAlertAction = UIAlertAction(title: "Okay", style: UIAlertActionStyle.Default) { (alertAction) -> Void in
+                let doneAction: UIAlertAction = UIAlertAction(title: "Okay", style: UIAlertActionStyle.default) { (alertAction) -> Void in
                     self.appDelegate.mpcManager.session.disconnect()
-                    self.dismissViewControllerAnimated(true, completion: nil)
+                    self.dismiss(animated: true, completion: nil)
                 }
                 
                 alert.addAction(doneAction)
                 
-                NSOperationQueue.mainQueue().addOperationWithBlock({ () -> Void in
-                    self.presentViewController(alert, animated: true, completion: nil)
+                OperationQueue.main.addOperation({ () -> Void in
+                    self.present(alert, animated: true, completion: nil)
                 })
             }
         }

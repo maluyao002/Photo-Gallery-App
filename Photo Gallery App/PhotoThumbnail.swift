@@ -12,7 +12,7 @@ class PhotoThumbnail: UICollectionViewCell {
     
     @IBOutlet var imageview: UIImageView! = nil
     
-    func setThumbnailImage(thumbnailImage: UIImage){
+    func setThumbnailImage(_ thumbnailImage: UIImage){
         self.imageview.image = thumbnailImage
     }
     

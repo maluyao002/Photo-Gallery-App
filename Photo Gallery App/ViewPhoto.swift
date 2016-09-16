@@ -15,7 +15,7 @@ class ViewPhoto: UIViewController, UIScrollViewDelegate{
 
     let context = CIContext(options: nil)
     var assetcloccetion: PHAssetCollection!
-    var photoAsset: PHFetchResult!
+    var photoAsset: PHFetchResult<AnyObject>!
     var index: Int = 0
     var filter: CIFilter!
     var extent: CGRect!
@@ -23,35 +23,35 @@ class ViewPhoto: UIViewController, UIScrollViewDelegate{
     var originalPhoto: UIImage!
     var editPhoto:UIImageView = UIImageView()
     
-    @IBAction func ButtonCancel(sender: AnyObject) {
-        self.navigationController?.popViewControllerAnimated(true)
+    @IBAction func ButtonCancel(_ sender: AnyObject) {
+        self.navigationController?.popViewController(animated: true)
     }
     
-    @IBAction func ButtonExport(sender: AnyObject) {
+    @IBAction func ButtonExport(_ sender: AnyObject) {
         let image = self.ImageView.image!
         let imageArray : [UIImage] = [image]
         let controller:UIActivityViewController = UIActivityViewController(activityItems: imageArray, applicationActivities: nil)
         //can not add more sharing methods
-        controller.excludedActivityTypes = [UIActivityTypePostToTwitter,UIActivityTypePostToFacebook,UIActivityTypePostToWeibo, UIActivityTypeMessage]
-        self.presentViewController(controller, animated: true, completion: nil)
+        controller.excludedActivityTypes = [UIActivityType.postToTwitter,UIActivityType.postToFacebook,UIActivityType.postToWeibo, UIActivityType.message]
+        self.present(controller, animated: true, completion: nil)
     }
     
     
-    @IBAction func ButtonTrash(sender: AnyObject) {
-        let alert = UIAlertController(title: "Delete Photo", message: "Are you sure to delete this photo?", preferredStyle: .Alert)
-        alert.addAction(UIAlertAction(title: "Yes", style: .Default, handler: {(alertAction) in
+    @IBAction func ButtonTrash(_ sender: AnyObject) {
+        let alert = UIAlertController(title: "Delete Photo", message: "Are you sure to delete this photo?", preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "Yes", style: .default, handler: {(alertAction) in
             //Delete Photo
-            PHPhotoLibrary.sharedPhotoLibrary().performChanges({
-                let request = PHAssetCollectionChangeRequest(forAssetCollection: self.assetcloccetion)
-                request.removeAssets([self.photoAsset[self.index]])
+            PHPhotoLibrary.shared().performChanges({
+                let request = PHAssetCollectionChangeRequest(for: self.assetcloccetion)
+                request!.removeAssets([self.photoAsset[self.index]])
                 }, completionHandler: {(success,error) in
                     NSLog("\nDeleted Image ->%@", (success ? "Success":"Error!"))
-                    alert.dismissViewControllerAnimated(true, completion: nil)
-                    self.photoAsset = PHAsset.fetchAssetsInAssetCollection(self.assetcloccetion, options: nil)
+                    alert.dismiss(animated: true, completion: nil)
+                    self.photoAsset = PHAsset.fetchAssets(in: self.assetcloccetion, options: nil)
                     if (self.photoAsset.count == 0){
                         //no photo left
                         self.ImageView.image = nil
-                        println("No photo left!")
+                        print("No photo left!")
                     }
                     if (self.index >= self.photoAsset.count){
                         self.index = self.photoAsset.count - 1
@@ -59,20 +59,20 @@ class ViewPhoto: UIViewController, UIScrollViewDelegate{
                     self.displayPhoto()
                 })
         }))
-        alert.addAction(UIAlertAction(title: "No", style: .Cancel, handler: {(alertAction) in
+        alert.addAction(UIAlertAction(title: "No", style: .cancel, handler: {(alertAction) in
             //Dont delete photo
-            alert.dismissViewControllerAnimated(true, completion: nil)
+            alert.dismiss(animated: true, completion: nil)
         }))
-        self.presentViewController(alert, animated: true, completion: nil)
+        self.present(alert, animated: true, completion: nil)
     }
     
-    @IBAction func ButtonEdit(sender: AnyObject) {
-        ImageView.hidden = true
-        ScrollView.hidden = false
+    @IBAction func ButtonEdit(_ sender: AnyObject) {
+        ImageView.isHidden = true
+        ScrollView.isHidden = false
         let image = self.ImageView.image!
         editPhoto.image = image
-        editPhoto.contentMode = UIViewContentMode.Center
-        editPhoto.frame = CGRectMake(0, 0, image.size.width, image.size.height)
+        editPhoto.contentMode = UIViewContentMode.center
+        editPhoto.frame = CGRect(x: 0, y: 0, width: image.size.width, height: image.size.height)
         ScrollView.contentSize = image.size
         
         let scrollViewFrame = ScrollView.frame
@@ -102,47 +102,47 @@ class ViewPhoto: UIViewController, UIScrollViewDelegate{
     @IBOutlet weak var photoEffectProcess: UIButton!
     
     //show the filters
-    @IBAction func ButtonFilter(sender: AnyObject) {
-        photoEffectInstantt.hidden = false
-        photoEffectNoir.hidden = false
-        photoEffectTransfer.hidden = false
-        photoEffectFade.hidden = false
-        photoEffectProcess.hidden = false
+    @IBAction func ButtonFilter(_ sender: AnyObject) {
+        photoEffectInstantt.isHidden = false
+        photoEffectNoir.isHidden = false
+        photoEffectTransfer.isHidden = false
+        photoEffectFade.isHidden = false
+        photoEffectProcess.isHidden = false
     }
     
     // button oldtime
-    @IBAction func photoEffectInstantt(sender: AnyObject) {
+    @IBAction func photoEffectInstantt(_ sender: AnyObject) {
         filter = CIFilter(name: "CIPhotoEffectInstant")
         self.outputImage()
     }
     
     // button black
-    @IBAction func photoEffectNoir(sender: AnyObject) {
+    @IBAction func photoEffectNoir(_ sender: AnyObject) {
         filter = CIFilter(name: "CIPhotoEffectNoir")
         outputImage()
     }
     
     //button classic
-    @IBAction func photoEffectTransfer(sender: AnyObject) {
+    @IBAction func photoEffectTransfer(_ sender: AnyObject) {
         filter = CIFilter(name: "CIPhotoEffectTransfer")
         outputImage()
     }
 
-    @IBAction func photoEffectFade(sender: AnyObject) {
+    @IBAction func photoEffectFade(_ sender: AnyObject) {
         filter = CIFilter(name: "CIPhotoEffectFade")
         outputImage()
     }
     
-    @IBAction func photoEffectProcess(sender: AnyObject) {
+    @IBAction func photoEffectProcess(_ sender: AnyObject) {
         filter = CIFilter(name: "CIPhotoEffectProcess")
         outputImage()
     }
     
-    @IBAction func ButtonSave(sender: AnyObject) {
-        if ScrollView.hidden == true {
-        let ciImage = CIImage(image: ImageView.image)
-        let saveImage = context.createCGImage(ciImage, fromRect: ciImage.extent())
-        ALAssetsLibrary().writeImageToSavedPhotosAlbum(saveImage, orientation: ALAssetOrientation.Up, completionBlock: { (path:NSURL!, error:NSError!) -> Void in
+    @IBAction func ButtonSave(_ sender: AnyObject) {
+        if ScrollView.isHidden == true {
+        let ciImage = CIImage(image: ImageView.image!!)
+        let saveImage = context.createCGImage(ciImage!, from: (ciImage?.extent)!)
+        ALAssetsLibrary().writeImageToSavedPhotosAlbum(saveImage, orientation: ALAssetOrientation.Up, completionBlock: { (path:URL!, error:NSError!) -> Void in
             if path != nil{
                 var myAlert = UIAlertController(title: "Alert", message: "New Image has been saved!", preferredStyle: UIAlertControllerStyle.Alert)
                 let okAction = UIAlertAction(title: "OK", style: UIAlertActionStyle.Default, handler: {
@@ -151,38 +151,37 @@ class ViewPhoto: UIViewController, UIScrollViewDelegate{
                 myAlert.addAction(okAction)
                 self.presentViewController(myAlert, animated: true, completion: nil)
             }else{
-                println("\(path)")
+                print("\(path)")
             }
         })
         }else{
-            UIGraphicsBeginImageContextWithOptions(ScrollView.bounds.size, true, UIScreen.mainScreen().scale)
+            UIGraphicsBeginImageContextWithOptions(ScrollView.bounds.size, true, UIScreen.main.scale)
             let offset = ScrollView.contentOffset
-            CGContextTranslateCTM(UIGraphicsGetCurrentContext(), -offset.x, -offset.y)
-            ScrollView.layer.renderInContext(UIGraphicsGetCurrentContext())
-            let image = UIGraphicsGetImageFromCurrentImageContext()
-            UIGraphicsEndImageContext()
-            UIImageWriteToSavedPhotosAlbum(image,nil, nil, nil)
-            var myAlert = UIAlertController(title: "Alert", message: "New Image has been saved!", preferredStyle: UIAlertControllerStyle.Alert)
-            let okAction = UIAlertAction(title: "OK", style: UIAlertActionStyle.Default, handler: {
-                action in self.dismissViewControllerAnimated(true, completion: nil)
+            UIGraphicsGetCurrentContext()?.translateBy(x: -offset.x, y: -offset.y)
+            ScrollView.layer.render(in: UIGraphicsGetCurrentContext()!)
+!        UIGraphicsEndImageContext()
+            UIImageWriteToSavedPhotosAlbum(image!,nil, nil, nil)
+            var myAlert = UIAlertController(title: "Alert", message: "New Image has been saved!", preferredStyle: UIAlertControllerStyle.alert)
+            let okAction = UIAlertAction(title: "OK", style: UIAlertActionStyle.default, handler: {
+                action in self.dismiss(animated: true, completion: nil)
             })
             myAlert.addAction(okAction)
-            self.presentViewController(myAlert, animated: true, completion: nil)
+            self.present(myAlert, animated: true, completion: nil)
         }
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        photoEffectInstantt.hidden = true
-        photoEffectNoir.hidden = true
-        photoEffectTransfer.hidden = true
-        photoEffectFade.hidden = true
-        photoEffectProcess.hidden = true
-        ScrollView.hidden = true
+        photoEffectInstantt.isHidden = true
+        photoEffectNoir.isHidden = true
+        photoEffectTransfer.isHidden = true
+        photoEffectFade.isHidden = true
+        photoEffectProcess.isHidden = true
+        ScrollView.isHidden = true
         ScrollView.delegate = self
         
-        editPhoto.frame = CGRectMake(0, 0, ScrollView.frame.size.width, ScrollView.frame.size.height)
-        editPhoto.userInteractionEnabled = true
+        editPhoto.frame = CGRect(x: 0, y: 0, width: ScrollView.frame.size.width, height: ScrollView.frame.size.height)
+        editPhoto.isUserInteractionEnabled = true
         ScrollView.addSubview(editPhoto)
         
     }
@@ -207,16 +206,16 @@ class ViewPhoto: UIViewController, UIScrollViewDelegate{
         editPhoto.frame = contentsFrame
     }
     
-    func scrollViewDidZoom(scrollView: UIScrollView) {
+    func scrollViewDidZoom(_ scrollView: UIScrollView) {
         centerScollViewContents()
     }
     
-    func viewForZoomingInScrollView(scrollView: UIScrollView) -> UIView? {
+    func viewForZooming(in scrollView: UIScrollView) -> UIView? {
         return editPhoto
     }
     
     
-    override func viewWillAppear(animated: Bool) {
+    override func viewWillAppear(_ animated: Bool) {
         self.navigationController?.hidesBarsOnTap = true
         self.displayPhoto()
     }
@@ -228,8 +227,8 @@ class ViewPhoto: UIViewController, UIScrollViewDelegate{
     
     //Display the large Image
     func displayPhoto(){
-        let imageManager = PHImageManager.defaultManager()
-        var ID = imageManager.requestImageForAsset(self.photoAsset[self.index] as! PHAsset, targetSize: PHImageManagerMaximumSize, contentMode: .AspectFit, options: nil, resultHandler: {
+        let imageManager = PHImageManager.default()
+        var ID = imageManager.requestImage(for: self.photoAsset[self.index] as! PHAsset, targetSize: PHImageManagerMaximumSize, contentMode: .aspectFit, options: nil, resultHandler: {
             (result, info)->Void in
             self.ImageView.image = result
         })
@@ -240,16 +239,16 @@ class ViewPhoto: UIViewController, UIScrollViewDelegate{
     func outputImage(){
 //        let currentEditing = originalPhoto
 //        let inputImage = currentEditing
-        if (ScrollView.hidden == true){
-            let ciImage = CIImage(image: ImageView.image)
+        if (ScrollView.isHidden == true){
+            let ciImage = CIImage(image: ImageView.image!)
             filter.setDefaults()
             filter.setValue(ciImage, forKey: kCIInputImageKey)
-            ImageView.image = UIImage(CGImage: context.createCGImage(filter.outputImage, fromRect: filter.outputImage.extent()))
+            ImageView.image = UIImage(cgImage: context.createCGImage(filter.outputImage!, from: (filter.outputImage?.!extent)!)!)
         }else{
-            let ciImage = CIImage(image: editPhoto.image)
+            let ciImage = CIImage(image: editPhoto.image!!)
             filter.setDefaults()
             filter.setValue(ciImage, forKey: kCIInputImageKey)
-            editPhoto.image = UIImage(CGImage: context.createCGImage(filter.outputImage, fromRect: filter.outputImage.extent()))
+            editPhoto.image = UIImage(cgImage: context.createCGImage(filter.outputImage!, from: (filter.outputImage?.!extent)!)!)
         }
     }
     

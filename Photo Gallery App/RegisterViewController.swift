@@ -29,14 +29,14 @@ class RegisterViewController: UIViewController {
         // Dispose of any resources that can be recreated.
     }
     
-    @IBAction func RegisterButton(sender: AnyObject) {
+    @IBAction func RegisterButton(_ sender: AnyObject) {
         
         let userEmail = UserEmailTextField.text
         let userPassword = UserPasswordTextField.text
         let userRePassword = UserRePasswordTextFiled.text
         
         //check empty field
-        if (userEmail.isEmpty || userPassword.isEmpty || userRePassword.isEmpty){
+        if ((userEmai!,l?.isEmpty)! || (userPassword?.isEmpty)! || (userRePassword?.isEmpty)!){
             //display alert
             displayAlertMessage("All fields are required")
             return
@@ -56,33 +56,33 @@ class RegisterViewController: UIViewController {
         myUser.password = userPassword
         myUser.email = userEmail
         
-        myUser.signUpInBackgroundWithBlock
+        myUser.signUpInBackground
         {
             (success:Bool, error:NSError?) -> Void in
                 //display alert message with confirmation
-        var myAlert = UIAlertController(title: "Alert", message: "Registration is successful!", preferredStyle: UIAlertControllerStyle.Alert)
-        let okAction = UIAlertAction(title: "Alert", style: UIAlertActionStyle.Default, handler: {
-            action in self.dismissViewControllerAnimated(true, completion: nil)
+        var myAlert = UIAlertController(title: "Alert", message: "Registration is successful!", preferredStyle: UIAlertControllerStyle.alert)
+        let okAction = UIAlertAction(title: "Alert", style: UIAlertActionStyle.default, handler: {
+            action in self.dismiss(animated: true, completion: nil)
         })
         myAlert.addAction(okAction)
-        self.presentViewController(myAlert, animated: true, completion: nil)
+        self.present(myAlert, animated: true, completion: nil)
         }
 
     }
     
-    func displayAlertMessage(message: String){
-        var myAlert = UIAlertController(title: "Alert", message: message, preferredStyle: UIAlertControllerStyle.Alert)
+    func displayAlertMessage(_ message: String){
+        let myAlert = UIAlertController(title: "Alert", message: message, preferredStyle: UIAlertControllerStyle.alert)
         
-        let okAction = UIAlertAction(title: "Alert", style: UIAlertActionStyle.Default, handler: nil)
+        let okAction = UIAlertAction(title: "Alert", style: UIAlertActionStyle.default, handler: nil)
         
         myAlert.addAction(okAction)
         
-        self.presentViewController(myAlert, animated: true, completion: nil)
+        self.present(myAlert, animated: true, completion: nil)
         
     }
     
-    override func viewWillAppear(animated: Bool) {
-        self.navigationController?.navigationBarHidden = true
+    override func viewWillAppear(_ animated: Bool) {
+        self.navigationController?.isNavigationBarHidden = true
     }
     
 }

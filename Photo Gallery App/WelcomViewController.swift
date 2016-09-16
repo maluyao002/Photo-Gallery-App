@@ -22,10 +22,10 @@ class WelcomViewController: UIViewController {
         // Dispose of any resources that can be recreated.
     }
     
-    override func viewWillAppear(animated: Bool) {
-        let isUserLoggedIn = NSUserDefaults.standardUserDefaults().boolForKey("UserLoggedIn")
+    override func viewWillAppear(_ animated: Bool) {
+        let isUserLoggedIn = UserDefaults.standard.bool(forKey: "UserLoggedIn")
         if(isUserLoggedIn){
-            self.performSegueWithIdentifier("directsegue", sender: self)
+            self.performSegue(withIdentifier: "directsegue", sender: self)
         }
     }
     

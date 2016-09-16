@@ -13,11 +13,11 @@ class RecoverPwdViewController: UIViewController {
 
     @IBOutlet weak var RecoverEmailTextField: UITextField!
     
-    @IBAction func RecoverButton(sender: AnyObject) {
+    @IBAction func RecoverButton(_ sender: AnyObject) {
         
         let userEmail = RecoverEmailTextField.text
         
-        PFUser.requestPasswordResetForEmailInBackground(userEmail, block:{(success:Bool, error:NSError?) -> Void in
+        PFUser.requestPasswordResetForEmailInBackground(userEmail!!, block:{(success:Bool, error:NSError?) -> Void in
             if(success){
                 let successMessage  = "Email message is sent to you ar \(userEmail)"
                 self.displayAlertMessage(successMessage)
@@ -32,20 +32,20 @@ class RecoverPwdViewController: UIViewController {
         
     }
     
-    func displayAlertMessage(message: String){
+    func displayAlertMessage(_ message: String){
         //display alert message
-        var myAlert = UIAlertController(title: "Alert", message: message, preferredStyle: UIAlertControllerStyle.Alert)
+        let myAlert = UIAlertController(title: "Alert", message: message, preferredStyle: UIAlertControllerStyle.alert)
         
-        let okAction = UIAlertAction(title: "ok", style: UIAlertActionStyle.Default, handler: nil)
+        let okAction = UIAlertAction(title: "ok", style: UIAlertActionStyle.default, handler: nil)
         
         myAlert.addAction(okAction)
         
-        self.presentViewController(myAlert, animated: true, completion: nil)
+        self.present(myAlert, animated: true, completion: nil)
         
     }
     
-    @IBAction func CancelButton(sender: AnyObject) {
-        self.navigationController?.popViewControllerAnimated(true)
+    @IBAction func CancelButton(_ sender: AnyObject) {
+        self.navigationController?.popViewController(animated: true)
     }
     
     

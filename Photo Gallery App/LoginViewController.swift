@@ -26,12 +26,12 @@ class LoginViewController: UIViewController {
         // Dispose of any resources that can be recreated.
     }
 
-    @IBAction func LoginButton(sender: AnyObject) {
+    @IBAction func LoginButton(_ sender: AnyObject) {
         
         let userEmail = EmailTextField.text
         let userPassword = PasswordTextField.text
 
-        PFUser.logInWithUsernameInBackground(userEmail, password: userPassword, block: {(user:PFUser?, error:NSError?) -> Void in
+        PFUser.logInWithUsernameInBackground(userEmail!!, password: userPassword!, block: {(user:PFUser?, error:NSError?) -> Void in
             if user != nil{
             //login is successful
                 NSUserDefaults.standardUserDefaults().setBool(true, forKey: "UserLoggedIn")
@@ -50,7 +50,7 @@ class LoginViewController: UIViewController {
         
     }
     
-    override func viewWillAppear(animated: Bool) {
-        self.navigationController?.navigationBarHidden = true
+    override func viewWillAppear(_ animated: Bool) {
+        self.navigationController?.isNavigationBarHidden = true
     }
 }
